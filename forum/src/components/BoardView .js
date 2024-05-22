@@ -1,6 +1,7 @@
-import { useEffect, useState } from "react";
-import WriteBoardForm from "./WriteBoardForm";
+import { useCallback, useEffect, useMemo, useState } from "react";
 import ModifyBoardForm from "./ModifyBoardForm";
+import { deleteBoard, loadOndBoard, viewListClick } from "../http/http";
+import { useFetch } from "../hooks/useFetch";
 
 export default function BoardView({
   selectedBoardId,
@@ -9,24 +10,17 @@ export default function BoardView({
   setNeedReload,
   myInfo,
 }) {
-  const [boardItem, setBoardItem] = useState();
   const [isModifyMode, setIsModifyMode] = useState(false);
+  const [needReloadDetail, setNeedReloadDetail] = useState();
 
   const onModifyClickHandler = () => {
     setIsModifyMode(true);
   };
 
   const onDeleteClickHandler = async () => {
-    const response = await fetch(
-      `http://localhost:8080/api/v1/boards/${boardItem.id}`,
-      {
-        method: "DELETE",
-        headers: {
-          Authorization: token,
-        },
-      }
-    );
-    const json = await response.json();
+    // http.js
+    const json = await deleteBoard(token, selectedBoardId);
+
     if (json.body) {
       // 삭제 성공!
       // 목록 컴포넌트를 노출
@@ -45,30 +39,36 @@ export default function BoardView({
     setSelectedBoardId(undefined);
   };
 
-  useEffect(() => {
-    const loadBoard = async () => {
-      const response = await fetch(
-        `http://localhost:8080/api/v1/boards/${selectedBoardId}`,
-        {
-          method: "GET",
-          headers: {
-            Authorization: token,
-          },
-        }
-      );
+  // 아래 useEffect대신 useFetch를 사용해 간단하게 변경하기.
+  const fetchLoadOneBoard = useCallback(loadOndBoard, []);
 
-      const json = await response.json();
-      setBoardItem(json.body);
-    };
-    loadBoard();
-    // []에는 재실행 되기 위한 것들을 모두 적어줌
-  }, [token, selectedBoardId]);
+  const fetchParam = useMemo(() => {
+    return { selectedBoardId, token };
+  }, [selectedBoardId, token]);
+
+  const { data, isLoading } = useFetch(
+    undefined,
+    fetchLoadOneBoard,
+    fetchParam
+  );
+
+  const { body: boardItem } = data || {};
+
+  // useEffect(() => {
+  //   const loadBoard = async () => {
+  //     const json = await loadOndBoard(token, selectedBoardId);
+
+  //     setBoardItem(json.body);
+  //   };
+  //   loadBoard();
+  //   // []에는 재실행 되기 위한 것들을 모두 적어줌
+  // }, [token, selectedBoardId, needReloadDetail]);
 
   return (
     <>
       <div>
-        {!boardItem && <div>데이터를 불러오는 중입니다.</div>}
-        {boardItem && (
+        {isLoading && <div>데이터를 불러오는 중입니다.</div>}
+        {boardItem && !isModifyMode && (
           <div>
             <h3>{boardItem.subject}</h3>
             <div>
@@ -88,13 +88,17 @@ export default function BoardView({
         {isModifyMode && (
           <ModifyBoardForm
             token={token}
-            setIsWriteMode={setIsModifyMode}
+            boardItem={boardItem}
+            setIsModifyMode={setIsModifyMode}
             setNeedReload={setNeedReload}
+            setNeedReloadDetail={setNeedReloadDetail}
+            selectedBoardId={selectedBoardId}
           />
         )}
         <div className="button-area right-align">
           {myInfo &&
             boardItem &&
+            !isModifyMode &&
             ((myInfo && myInfo.email === boardItem.email) ||
               myInfo.adminYn === "Y") && (
               <>
@@ -102,7 +106,9 @@ export default function BoardView({
                 <button onClick={onDeleteClickHandler}>삭제</button>
               </>
             )}
-          <button onClick={onViewListClickHandler}>목록보기</button>
+          {!isModifyMode && (
+            <button onClick={onViewListClickHandler}>목록보기</button>
+          )}
         </div>
       </div>
     </>

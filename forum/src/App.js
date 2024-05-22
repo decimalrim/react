@@ -1,30 +1,30 @@
-import { useEffect, useState } from "react";
+import { useCallback, useMemo, useState } from "react";
 import Header from "./components/Header";
 import BoardApp from "./components/BoardApp";
+import { loadMyData } from "./http/http";
+import { useFetch } from "./hooks/useFetch";
 
 export default function App() {
   const [token, setToken] = useState();
-  const [myInfo, setMyInfo] = useState();
 
-  useEffect(() => {
-    const loadMyInfo = async () => {
-      if (!token) {
-        setMyInfo(undefined);
-        return;
-      }
-      const response = await fetch(`http://localhost:8080/api/v1/member`, {
-        method: "GET",
-        headers: {
-          Authorization: token,
-        },
-      });
-      const json = await response.json();
-
-      console.log(json.body);
-      setMyInfo(json.body);
-    };
-    loadMyInfo();
+  // 메모리가 바뀌지 않게 해준다.
+  const fetchLoadMyData = useCallback(() => {
+    if (token) {
+      return loadMyData;
+    } else {
+      return () => {
+        return undefined;
+      };
+    }
   }, [token]);
+
+  const fetchToken = useMemo(() => {
+    return { token };
+  }, [token]);
+
+  const { data } = useFetch(undefined, fetchLoadMyData(), fetchToken);
+  // undefined라면 {}을 주고, undefined가 아니라면 data를 넘겨라
+  const { body: myInfo } = data || {};
 
   return (
     <div className="main-container">
