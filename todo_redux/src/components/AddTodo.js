@@ -1,5 +1,6 @@
 import { useRef, memo } from "react";
 import { useDispatch } from "react-redux";
+import { todoActions } from "../stores/toolkit/store";
 
 /**
  * TODO 아이템을 등록하는 Component
@@ -22,13 +23,23 @@ export default memo(function AddTodo({ style }) {
    */
   const onClickHandler = () => {
     // onAdd(taskRef.current.value, dueDateRef.current.value);
-    todoDispatch({
-      type: "ADD-TODO",
-      payload: {
+
+    // toolkit dispatch 코드
+    todoDispatch(
+      todoActions.add({
         task: taskRef.current.value,
         dueDate: dueDateRef.current.value,
-      },
-    });
+      })
+    );
+
+    // redux dispatch 코드
+    // todoDispatch({
+    //   type: "ADD-TODO",
+    //   payload: {
+    //     task: taskRef.current.value,
+    //     dueDate: dueDateRef.current.value,
+    //   },
+    // });
   };
 
   return (

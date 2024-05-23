@@ -9,7 +9,7 @@ export default function TodoApp() {
   // 1. React redux 에서 todo state를 받아오기.
   // React redux가 관리하는 state는 읽기전용.
   // state를 원하는 형태로 복제해서 사용해야한다.
-  const todo = useSelector((state) => [...state]);
+  const todo = useSelector((state) => [...state.todo]);
 
   // 2. setTodo를 대체하기 위해서 useDispatch를 사용.
   //    TodoApp 컴포넌트에서는 굳이 이벤트 함수를 만들 필요가 없다.
