@@ -1,6 +1,6 @@
 import { useRef } from "react";
 import { useDispatch } from "react-redux";
-import { todoActions } from "../stores/toolkit/store";
+import { doneTodo, todoActions } from "../stores/toolkit/store";
 
 // todo 한가지에 대한 관리
 
@@ -30,8 +30,11 @@ export default function Todo({ todo, style }) {
     const checkbox = checkboxRef.current;
     const checked = checkbox.checked;
 
+    // Thunk dispatch 코드
+    todoDispatch(doneTodo({ id, task, dueDate, isDone: checked }));
+
     // toolkit dispatch 코드
-    todoDispatch(todoActions.done({ id, isDone: checked }));
+    // todoDispatch(todoActions.done({ id, isDone: checked }));
 
     // react-redux dispatch 코드
     // const payload = { id, isDone: checked };
