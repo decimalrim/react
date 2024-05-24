@@ -1,6 +1,7 @@
 import { useRef } from "react";
 import { useDispatch } from "react-redux";
-import { doneTodo, todoActions } from "../stores/toolkit/store";
+import { doneTodo } from "../../stores/toolkit/store";
+import { Link } from "react-router-dom";
 
 // todo 한가지에 대한 관리
 
@@ -53,7 +54,11 @@ export default function Todo({ todo, style }) {
           ref={checkboxRef}
         />
       </div>
-      <div style={{ flexGrow: 1 }}>{task}</div>
+      <div style={{ flexGrow: 1 }}>
+        <Link to={`/todo/${id}`} style={{ color: isDone ? "#ccc" : "#333" }}>
+          {task}
+        </Link>
+      </div>
       <div>{dueDate}</div>
     </li>
   );

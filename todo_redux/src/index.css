@@ -155,6 +155,12 @@ a:hover {
   color: #666;
 }
 
+a.active {
+  color: #d5a7fa;
+  text-decoration: underline;
+  font-weight: 900;
+}
+
 table {
   margin-top: 1rem;
   border-collapse: collapse;

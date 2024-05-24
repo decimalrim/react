@@ -18,7 +18,6 @@ const todoSliceStore = createSlice({
     },
     // 여기 state는 직접 변경가능함
     add(state, action) {
-      console.log("todo > add: ", action);
       const payload = action.payload;
       state.push({
         id: payload.id,
@@ -28,8 +27,6 @@ const todoSliceStore = createSlice({
       });
     },
     done(state, action) {
-      console.log("todo > done: ", action);
-
       const payload = action.payload;
       // payload: {id: 2, isDone: true}
       /* state: [
@@ -50,6 +47,39 @@ const todoSliceStore = createSlice({
       const index = state.findIndex((item) => item.id === id);
       state[index].isDone = isDone;
     },
+    addSubTodo(state, action) {
+      // todo state의 구조
+      /**
+       * todo: [
+       *   {id, task, dueDate, isDone, sub: [
+       *      {id, task, dueDate, isDone},
+       *      {id, task, dueDate, isDone},
+       *      {id, task, dueDate, isDone},
+       * ]},
+       *   {id, task, dueDate, isDone}
+       *   {id, task, dueDate, isDone}
+       *   {id, task, dueDate, isDone}
+       *   {id, task, dueDate, isDone}
+       * ]
+       */
+      const { parentTodoId, id, task, dueDate } = action.payload;
+      // 1. parentTodoId와 todo의 id가 같은 객체 리터럴의 인덱스를 찾는다.
+      const index = state.findIndex((todo) => todo.id === parentTodoId);
+
+      // 2. parentTodo Index에 sub 항목이 존재하는지 확인한다.
+      if (!state[index].sub) {
+        //       sub항목이 존재하지 않는다면, sub 배열을 생성. (먼저 있는게 좋음)
+        state[index].sub = {};
+      }
+      //       sub항목이 존재한다면 sub 항목에 새로운 todo를 추가한다.
+      state[index].sub[id] = { id, isDone: false, task, dueDate };
+    },
+    doneSubTodo(state, action) {
+      const { parentTodoId, id, isDone } = action.payload;
+      const index = state.findIndex((todo) => todo.id === parentTodoId);
+      // const subTodoIndex = state[index].sub.findIndex((todo) => todo.id === id);
+      state[index].sub[id].isDone = isDone;
+    },
   },
 });
 
@@ -63,15 +93,11 @@ export const loadTodo = () => {
       method: "GET",
     });
     const json = await response.json();
-    console.log(json);
 
     const todoList = [];
     for (let key in json) {
-      console.log("key", key);
-      console.log("value", json[key]);
       todoList.push(json[key]);
     }
-    console.log(todoList);
 
     // todoSliceStore에 저장한다.
     dispatch(todoActions.load(todoList));
@@ -90,8 +116,7 @@ export const addTodo = (newTodoItem) => {
       method: "PUT",
       body: JSON.stringify(newTodoItem),
     });
-    const json = await response.json;
-    console.log(json);
+    // const json = await response.json;
   };
 };
 
@@ -106,8 +131,40 @@ export const doneTodo = (doneTodoItem) => {
       method: "PUT",
       body: JSON.stringify(doneTodoItem),
     });
-    const json = await response.json;
-    console.log(json);
+    // const json = await response.json;
+  };
+};
+
+export const addSubTodo = (addSubTodoItem) => {
+  return async (dispatch) => {
+    dispatch(todoActions.addSubTodo(addSubTodoItem));
+
+    // firebase에도 저장한다.
+    const url = "https://react-todo-c9276-default-rtdb.firebaseio.com/";
+
+    await fetch(
+      `${url}/todo/${addSubTodoItem.parentTodoId}/sub/${addSubTodoItem.id}.json`,
+      {
+        method: "PUT",
+        body: JSON.stringify(addSubTodoItem),
+      }
+    );
+  };
+};
+
+export const doneSubTodo = (doneSubTodoItem) => {
+  return async (dispatch) => {
+    dispatch(todoActions.doneSubTodo(doneSubTodoItem));
+
+    // firebase에도 저장한다.
+    const url = "https://react-todo-c9276-default-rtdb.firebaseio.com/";
+    await fetch(
+      `${url}/todo/${doneSubTodoItem.parentTodoId}/sub/${doneSubTodoItem.id}.json`,
+      {
+        method: "PUT",
+        body: JSON.stringify(doneSubTodoItem),
+      }
+    );
   };
 };
 

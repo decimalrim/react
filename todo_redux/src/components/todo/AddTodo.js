@@ -1,12 +1,12 @@
 import { useRef, memo } from "react";
 import { useDispatch } from "react-redux";
-import { addTodo } from "../stores/toolkit/store";
+import { addSubTodo, addTodo } from "../../stores/toolkit/store";
 // import { todoActions } from "../stores/toolkit/store";
 
 /**
  * TODO 아이템을 등록하는 Component
  */
-export default memo(function AddTodo({ style }) {
+export default memo(function AddTodo({ style, sub, parentTodoId }) {
   console.log("Run AddTodo");
 
   const labelStyles = { flexShrink: 1, margin: "0.5rem 1rem" };
@@ -26,14 +26,21 @@ export default memo(function AddTodo({ style }) {
     // onAdd(taskRef.current.value, dueDateRef.current.value);
 
     // Thunk dispatch 코드
-    todoDispatch(
-      addTodo({
-        id: parseInt(Math.random() * 100_000_000),
-        isDone: false,
-        task: taskRef.current.value,
-        dueDate: dueDateRef.current.value,
-      })
-    );
+    const payload = {
+      id: parseInt(Math.random() * 100_000_000),
+      isDone: false,
+      task: taskRef.current.value,
+      dueDate: dueDateRef.current.value,
+    };
+
+    if (sub) {
+      // 서브 todo 등록
+      payload.parentTodoId = parentTodoId;
+    }
+
+    const thunk = sub ? addSubTodo(payload) : addTodo(payload);
+
+    todoDispatch(thunk);
 
     // toolkit dispatch 코드
     // todoDispatch(
